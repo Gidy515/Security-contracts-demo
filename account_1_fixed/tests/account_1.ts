@@ -18,9 +18,9 @@ describe("NFT Marketplace Account Security Fixed", () => {
         commitment: "confirmed",
         maxSupportedTransactionVersion: 0,
       });
-      
+
       if (tx && tx.meta && tx.meta.logMessages) {
-        tx.meta.logMessages.forEach(log => {
+        tx.meta.logMessages.forEach((log) => {
           if (log.includes("Program log:")) {
             console.log("📝", log.replace("Program log: ", ""));
           }
@@ -55,10 +55,16 @@ describe("NFT Marketplace Account Security Fixed", () => {
       program.programId
     );
 
-    await provider.connection.requestAirdrop(alice.publicKey, 2 * anchor.web3.LAMPORTS_PER_SOL);
-    await provider.connection.requestAirdrop(bob.publicKey, 2 * anchor.web3.LAMPORTS_PER_SOL);
-    
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await provider.connection.requestAirdrop(
+      alice.publicKey,
+      2 * anchor.web3.LAMPORTS_PER_SOL
+    );
+    await provider.connection.requestAirdrop(
+      bob.publicKey,
+      2 * anchor.web3.LAMPORTS_PER_SOL
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   });
 
   it("should prevent account takeover with PDA-based profiles", async () => {
@@ -72,7 +78,7 @@ describe("NFT Marketplace Account Security Fixed", () => {
     console.log("\nStep 1: Alice creates her profile");
     const aliceInitTxSig = await program.methods
       .initializeUserProfile("alice_the_artist")
-      .accounts({
+      .accountsPartial({
         userProfile: aliceProfilePDA,
         authority: alice.publicKey,
       })
@@ -81,20 +87,24 @@ describe("NFT Marketplace Account Security Fixed", () => {
 
     await showProgramLogs(aliceInitTxSig, "Alice's Secure Profile Creation");
 
-    let aliceProfileData = await program.account.userProfile.fetch(aliceProfilePDA);
+    let aliceProfileData = await program.account.userProfile.fetch(
+      aliceProfilePDA
+    );
     console.log("Alice's profile created successfully");
     console.log("- Authority:", aliceProfileData.authority.toBase58());
     console.log("- Username:", aliceProfileData.username);
     console.log("- NFT Count:", aliceProfileData.nftCount.toString());
-    
-    expect(aliceProfileData.authority.toBase58()).to.equal(alice.publicKey.toBase58());
+
+    expect(aliceProfileData.authority.toBase58()).to.equal(
+      alice.publicKey.toBase58()
+    );
     expect(aliceProfileData.username).to.equal("alice_the_artist");
 
     // Step 2: Bob creates his own profile
     console.log("\nStep 2: Bob creates his own separate profile");
     const bobInitTxSig = await program.methods
       .initializeUserProfile("bob_the_collector")
-      .accounts({
+      .accountsPartial({
         userProfile: bobProfilePDA,
         authority: bob.publicKey,
       })
@@ -107,8 +117,10 @@ describe("NFT Marketplace Account Security Fixed", () => {
     console.log("Bob's profile created successfully");
     console.log("- Authority:", bobProfileData.authority.toBase58());
     console.log("- Username:", bobProfileData.username);
-    
-    expect(bobProfileData.authority.toBase58()).to.equal(bob.publicKey.toBase58());
+
+    expect(bobProfileData.authority.toBase58()).to.equal(
+      bob.publicKey.toBase58()
+    );
     expect(bobProfileData.username).to.equal("bob_the_collector");
 
     // Step 3: Alice lists an NFT
@@ -126,7 +138,10 @@ describe("NFT Marketplace Account Security Fixed", () => {
     await showProgramLogs(aliceListTxSig, "Alice's NFT Listing");
 
     aliceProfileData = await program.account.userProfile.fetch(aliceProfilePDA);
-    console.log("Alice listed NFT, count:", aliceProfileData.nftCount.toString());
+    console.log(
+      "Alice listed NFT, count:",
+      aliceProfileData.nftCount.toString()
+    );
     expect(aliceProfileData.nftCount.toString()).to.equal("1");
 
     // Step 4: Bob cannot attack Alice's profile
@@ -134,13 +149,13 @@ describe("NFT Marketplace Account Security Fixed", () => {
     try {
       const attackTxSig = await program.methods
         .initializeUserProfile("bob_the_hacker")
-        .accounts({
+        .accountsPartial({
           userProfile: aliceProfilePDA,
           authority: bob.publicKey,
         })
         .signers([bob])
         .rpc();
-      
+
       // If we somehow get here, show the logs
       await showProgramLogs(attackTxSig, "Bob's Failed Attack Attempt");
       throw new Error("Bob should not be able to reinitialize Alice's profile");
@@ -156,8 +171,10 @@ describe("NFT Marketplace Account Security Fixed", () => {
     console.log("- Authority:", aliceProfileData.authority.toBase58());
     console.log("- Username:", aliceProfileData.username);
     console.log("- NFT Count:", aliceProfileData.nftCount.toString());
-    
-    expect(aliceProfileData.authority.toBase58()).to.equal(alice.publicKey.toBase58());
+
+    expect(aliceProfileData.authority.toBase58()).to.equal(
+      alice.publicKey.toBase58()
+    );
     expect(aliceProfileData.username).to.equal("alice_the_artist");
     expect(aliceProfileData.nftCount.toString()).to.equal("1");
 
@@ -172,7 +189,7 @@ describe("NFT Marketplace Account Security Fixed", () => {
         })
         .signers([bob])
         .rpc();
-      
+
       // If we somehow get here, show the logs
       await showProgramLogs(bobAccessTxSig, "Bob's Failed Access Attempt");
       throw new Error("Bob should not be able to control Alice's profile");
@@ -192,10 +209,16 @@ describe("NFT Marketplace Account Security Fixed", () => {
       .signers([alice])
       .rpc();
 
-    await showProgramLogs(aliceSecondListTxSig, "Alice's Second NFT Listing (Retains Control)");
+    await showProgramLogs(
+      aliceSecondListTxSig,
+      "Alice's Second NFT Listing (Retains Control)"
+    );
 
     aliceProfileData = await program.account.userProfile.fetch(aliceProfilePDA);
-    console.log("Alice listed another NFT, count:", aliceProfileData.nftCount.toString());
+    console.log(
+      "Alice listed another NFT, count:",
+      aliceProfileData.nftCount.toString()
+    );
     expect(aliceProfileData.nftCount.toString()).to.equal("2");
 
     // Security Analysis
@@ -203,8 +226,9 @@ describe("NFT Marketplace Account Security Fixed", () => {
     console.log("Fix Applied: PDA-based Account Derivation");
     console.log("- Each user gets unique PDA derived from their public key");
     console.log("- 'init' constraint prevents account reinitialization");
-    console.log("- Seeds constraint ensures only owner can initialize their PDA");
+    console.log(
+      "- Seeds constraint ensures only owner can initialize their PDA"
+    );
     console.log("- Results in complete prevention of account takeover");
   });
 });
-
