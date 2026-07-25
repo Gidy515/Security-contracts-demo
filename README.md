@@ -31,7 +31,7 @@ Each program has its own directory containing the vulnerable version, the fixed 
 
 | # | Program | Vulnerability Class | Severity | Status |
 |---|---------|---------------------|----------|--------|
-| 1 | [account1](./account1) | TBD | TBD | 🔲 In progress |
+| 1 | [account1](./account1) | Missing initialization check (reinitialization attack) | Critical | ✅ Complete |
 | 2 | [account2](./account2) | TBD | TBD | 🔲 In progress |
 | 3 | [account3](./account3) | TBD | TBD | 🔲 In progress |
 | 9 | [account9](./account9) | TBD | TBD | 🔲 In progress |
