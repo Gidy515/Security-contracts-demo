@@ -18,9 +18,9 @@ describe("NFT Marketplace Authority Transfer", () => {
         commitment: "confirmed",
         maxSupportedTransactionVersion: 0,
       });
-      
+
       if (tx && tx.meta && tx.meta.logMessages) {
-        tx.meta.logMessages.forEach(log => {
+        tx.meta.logMessages.forEach((log) => {
           if (log.includes("Program log:")) {
             console.log("📝", log.replace("Program log: ", ""));
           }
@@ -42,10 +42,16 @@ describe("NFT Marketplace Authority Transfer", () => {
     alice = Keypair.generate();
     bob = Keypair.generate();
 
-    await provider.connection.requestAirdrop(alice.publicKey, 5 * anchor.web3.LAMPORTS_PER_SOL);
-    await provider.connection.requestAirdrop(bob.publicKey, 2 * anchor.web3.LAMPORTS_PER_SOL);
-    
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await provider.connection.requestAirdrop(
+      alice.publicKey,
+      5 * anchor.web3.LAMPORTS_PER_SOL
+    );
+    await provider.connection.requestAirdrop(
+      bob.publicKey,
+      2 * anchor.web3.LAMPORTS_PER_SOL
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     [aliceProfilePda] = await anchor.web3.PublicKey.findProgramAddress(
       [Buffer.from("profile"), alice.publicKey.toBuffer()],
@@ -99,11 +105,15 @@ describe("NFT Marketplace Authority Transfer", () => {
 
     await showProgramLogs(transferTxSig, "Unauthorized Authority Transfer");
 
-    const profileAfter = await program.account.userProfile.fetch(aliceProfilePda);
+    const profileAfter = await program.account.userProfile.fetch(
+      aliceProfilePda
+    );
     console.log("Authority transfer completed");
     console.log("New authority:", profileAfter.authority.toBase58());
 
-    expect(profileAfter.authority.toBase58()).to.equal(bob.publicKey.toBase58());
+    expect(profileAfter.authority.toBase58()).to.equal(
+      bob.publicKey.toBase58()
+    );
 
     // Step 4: Alice is now blocked
     console.log("\nStep 4: Alice can no longer access her profile");
